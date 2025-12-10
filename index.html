@@ -99,7 +99,7 @@
             div.innerHTML = `
                 <span>${nome}</span>
                 <div>
-                    <a href="${link}" target="_blank">Abrir</a>
+                    <a href="${link.startsWith('http') ? link : 'https://' + link}" target="_blank">Abrir</a>
                     <button onclick="removerCliente('${nome}', this)">X</button>
                 </div>
             `;
