@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hub de clientes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .cliente {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .cliente:last-child {
+            border-bottom: none;
+        }
+        a {
+            text-decoration: none;
+            color: #007BFF;
+            font-weight: bold;
+        }
+        .add-area {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        input {
+            padding: 8px;
+            width: 70%;
+            border-radius: 6px;
+            border: 1px solid #aaa;
+        }
+        button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            background: #007BFF;
+            color: #fff;
+            cursor: pointer;
+            margin-left: 6px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hub de Clientes - Implantação</h1>
+
+    <div class="container" id="listaClientes">
+        <!-- Clientes serão listados aqui -->
+    </div>
+
+    <div class="add-area">
+        <input type="text" id="nomeCliente" placeholder="Nome do cliente" />
+        <input type="text" id="linkPlanilha" placeholder="URL da planilha" />
+        <button onclick="addCliente()">Adicionar</button>
+    </div>
+
+    <script>
+        // URL DO SEU GOOGLE APPS SCRIPT PUBLICADO COMO WEB APP
+        const API_URL = "https://script.google.com/macros/s/AKfycbx7NNC6ZNKwF0Wqw55ws2QoQ73BxuFu2tKLzbLR8X3SOYfXMzRSFHVkVeyAHdmBYG42/exec";
+
+        async function carregarClientes() {
+            const container = document.getElementById('listaClientes');
+            container.innerHTML = '';
+
+            try {
+                const res = await fetch(API_URL + '?action=get');
+                const clientes = await res.json();
+
+                clientes.forEach(c => adicionarClienteNaTela(c.nome, c.link, false));
+            } catch (e) {
+                console.error(e);
+                alert('Erro ao carregar clientes.');
+            }
+        }
+
+        function adicionarClienteNaTela(nome, link, salvar = true) {
+            const container = document.getElementById('listaClientes');
+            const div = document.createElement("div");
+            div.className = "cliente";
+            div.innerHTML = `
+                <span>${nome}</span>
+                <div>
+                    <a href="${link}" target="_blank">Abrir</a>
+                    <button onclick="removerCliente('${nome}', this)">X</button>
+                </div>
+            `;
+            container.appendChild(div);
+
+            if (salvar) salvarCliente(nome, link);
+        }
+
+        async function salvarCliente(nome, link) {
+            await fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "add", nome, link })
+            });
+        }
+
+        async function removerCliente(nome, btn) {
+            btn.parentElement.parentElement.remove();
+
+            await fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "remove", nome })
+            });
+        }
+
+        function addCliente() {
+            const nome = document.getElementById('nomeCliente').value;
+            const link = document.getElementById('linkPlanilha').value;
+
+            if (!nome || !link) return alert("Preencha nome e link!");
+
+            adicionarClienteNaTela(nome, link, true);
+            document.getElementById('nomeCliente').value = "";
+            document.getElementById('linkPlanilha').value = "";
+        }
+
+        window.onload = carregarClientes;
+    </script>
+</body>
+</html>
